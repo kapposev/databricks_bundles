@@ -1,0 +1,63 @@
+name: CI
+
+pr:
+  branches:
+    include:
+      - "*"
+  paths:
+    include:
+      - .azuredevops/.azure-pipelines/**
+      - src/**
+      - tests/**
+      - resources/**
+      - pyproject.toml
+
+jobs:
+  - job: ci
+    displayName: CI
+    strategy:
+      matrix:
+        ubuntu:
+          imageName: ubuntu-latest
+        macos:
+          imageName: macos-latest
+        windows:
+          imageName: windows-latest
+    pool:
+      vmImage: $(imageName)
+
+    steps:
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: 3.10
+        displayName: Setup Python
+
+      - script: |
+          python -m pip install --upgrade pip
+          pip install poetry
+        displayName: Install Poetry
+
+      - script: |
+          poetry install --no-root
+        displayName: Install dependencies
+
+      - script: |
+          poetry run ruff check --output-format=github .
+          poetry run mypy .
+        displayName: Run formatting checks
+
+      - script: |
+          poetry run pytest -v tests
+        displayName: Run unit tests
+        env:
+          PYTHONPATH: $(Build.SourcesDirectory)/src/2
+
+      # Running in a bash shell is necessary to use the `diff` on Windows
+      - task: Bash@3
+        inputs:
+          targetType: inline
+          script: |
+            poetry build
+            tar -xvzf dist/2-*.tar.gz
+            diff -r -x __pycache__ src/2/ 2-*/src/2
+        displayName: Build and validate package

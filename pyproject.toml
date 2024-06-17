@@ -1,0 +1,128 @@
+[tool.poetry]
+name = "test_bundles"
+version = "0.1.0"
+description = "test bundles"
+authors = [
+    "Evangelos <evangelos.kappos@revodata.nl>",
+]
+readme = "README.md"
+classifiers = ["Programming Language :: Python :: 3.10.12", "Operating System :: OS Independent"]
+packages = [{ include = "test_bundles", from = "src" }]
+scripts = { "main" = "test_bundles.main:main" }
+
+[tool.poetry.dependencies]
+python = "3.10.12"  # Databricks Runtime 14.3 LTS
+
+[tool.poetry.dev-dependencies]
+databricks = "^0.2"
+databricks-connect = "^14.3.1"
+databricks-sdk = "^0.24.0"
+ipykernel = "^6.25.2"
+pandas = "1.5.3"  # Databricks Runtime 14.3 LTS
+pre-commit = "^3.7.0"
+pre-commit-update = "^0.2.1"
+pydantic = "^2.6.4"
+pyspark = "3.5.0"  # Databricks Runtime 14.3 LTS
+mypy = "^1.9.0"
+mypy-extensions = "^1.0.0"
+pylint = "^3.1.0"
+databricks-labs-pylint = "^0.1.1"
+ruff = "^0.3.5"
+types-pytz = "^2024.1.0.20240203"
+python-semantic-release = "^9.6.0"
+pytest = "^8.1.1"
+pytest-cov = "^5.0.0"
+pytest-mock = "^3.14.0"
+coverage = "^7.5.3"
+coverage-badge = "^1.1.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+extend-include = ["*.ipynb"]
+exclude = [".venv/"]
+builtins = ["dbutils", "dlt", "display"]
+
+[tool.ruff.lint]
+pydocstyle.convention = "numpy"
+select = ["ALL"]
+ignore = [
+    "D203",     # "One blank line required before class docstring." Should be disabled by default.
+    "D213",     # "Multi-line docstring summary should start at the second line." Should be disabled by default.
+    "E501",     # "Line too long." Sometimes my comments are a bit longer.
+    "S101",     # "Use of `assert` detected." Used quite often in tests.
+    "FBT001",   # "Boolean positional arg in function definition." I sometimes use this.
+    "FBT002",   # "Boolean default value in function definition." I sometimes use this too.
+    "ERA001",   # "Found commented out code." I comment out code sometimes
+    "E731",     # "Do not assign a lambda expression, use a def." Needed for spark UDFs.
+    "N812",     # "Lowercase `functions` imported as non-lowercase." Pretty standard for spark programming.
+    "COM812",   # "Missing trailing comma." Ignored since it conflicts with the formatter.
+    "ISC001",   # "Implicit string concatenation." Ignored since it conflicts with the formatter.
+    "T201",     # "`print` found." I use this for debugging.
+]
+unfixable = [
+    "F401",     # "Unused import." Disabled since it makes linting/formatting notebooks messy and impossible.
+]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+ignore_missing_imports = true
+warn_unused_ignores = false
+disallow_untyped_decorators = false
+explicit_package_bases = true
+files = "src/**/*.py, tests/**/*.py"
+exclude = [".venv/"]
+
+[tool.mypy.overrides]
+module = [
+    "dbutils",
+    "dlt",
+    "display",
+]
+ignore_missing_imports = true
+
+[tool.pylint]
+max-line-length = 100
+ignore-paths = [".venv/"]
+disable = [
+    "C0301",    # "Line too long." Handled by Ruff.
+    "C8920",    # "Remove commented out code." Handled by Ruff.
+    "R0913",    # "Too many arguments." Handled by Ruff.
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.semantic_release]
+version_toml = ["pyproject.toml:tool.poetry.version"]
+major_on_zero = true
+branch = "main"
+hvcs = "github"
+commit_author = "github-actions <actions@github.com>"
+upload_to_release = "false"
+changelog_file = "CHANGELOG.md"
+changelog_generate = "true"
+commit_parser = "angular"
+commit_version_number = { enabled = "true" }
+
+[tool.semantic_release.changelog]
+exclude_commit_patterns = [
+    # Uncomment these patterns to repress from CHANGELOG
+    # '''chore(?:\([^)]*?\))?: .+''',
+    # '''ci(?:\([^)]*?\))?: .+''',
+    # '''refactor(?:\([^)]*?\))?: .+''',
+    # '''style(?:\([^)]*?\))?: .+''',
+    # '''test(?:\([^)]*?\))?: .+''',
+    # '''build\((?!deps\): .+)''',
+    '''Merged? .*''',
+    '''Initial Commit.*''',
+    '''Merge pull request #\d+ from .+''',
+    # Old semantic-release version commits
+    '''^\d+\.\d+\.\d+''',
+]
